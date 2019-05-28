@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "bin": {
-    "hafsa": "./bin/kludd.js"
+    "kludd": "./bin/kludd.js"
   },
   "author": "Karl West",
   "license": "MIT"

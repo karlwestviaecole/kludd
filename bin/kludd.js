@@ -40,14 +40,23 @@ function handler(req, res) {
 }
 
 const inspectUrl = {
-    getFileExtension: (u) => path.extname(url.parse(u).pathname),
-    hasFileExtension: (u) => inspectUrl.getFileExtension(u).length > 0,
-    containsFilePath: (u) => inspectUrl.hasFileExtension(u),
-    fileTypeIsSupported: (u) => inspectUrl.hasFileExtension(u) &&
+
+    getFileExtension: u => path.extname(url.parse(u).pathname),
+
+    hasFileExtension: u => inspectUrl.getFileExtension(u).length > 0,
+
+    containsFilePath: u => inspectUrl.hasFileExtension(u),
+
+    fileTypeIsSupported: u => inspectUrl.hasFileExtension(u) &&
         fileExtensionContentTypeMap.hasOwnProperty(inspectUrl.getFileExtension(u)),
-    toServerPath: (u) => path.join(process.cwd(), url.parse(u).pathname),
-    toServerPathIndexFile: (u) => path.join(process.cwd(), url.parse(u).pathname, 'index.html'),
-    toIndexFileUrl: (u) => url.parse(u).pathname.endsWith('/') ? url.parse(u).pathname + 'index.html' : url.parse(u).pathname + '/index.html'
+
+    toServerPath: u => path.join(process.cwd(), url.parse(u).pathname),
+
+    toServerPathIndexFile: u => path.join(process.cwd(), url.parse(u).pathname, 'index.html'),
+
+    toIndexFileUrl: u => url.parse(u).pathname.endsWith('/') ?
+        url.parse(u).pathname + 'index.html' :
+        url.parse(u).pathname + '/index.html'
 }
 
 const fileExtensionContentTypeMap = {
@@ -61,33 +70,29 @@ const fileExtensionContentTypeMap = {
     '.ico': 'image/x-icon'
 }
 
-const contentTypeForFilePath = (filePath) => fileExtensionContentTypeMap[path.extname(filePath)];
+const contentTypeForFilePath = filePath => fileExtensionContentTypeMap[path.extname(filePath)];
 
 function dirContent(dirPath, req, res) {
 
-    fs.readdir(dirPath, (err, items) => {
+    fs.readdir(dirPath, (err, files) => {
 
         if (err) {
             return notFound(req, res);
         }
 
         let dirUrl = url.parse(req.url).pathname;
+
         if (!dirUrl.endsWith('/')) {
             return redirect(dirUrl + '/', req, res);
         }
 
-        let body = [];
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
 
-        for (let i = 0; i < items.length; i++) {
-            body.push('<a href="' + dirUrl + items[i] + '">');
-            body.push(items[i]);
-            body.push('</a>');
-            body.push('<br />');
-            body.push('\n');
-        }
+        res.write(`<!doctype html><html><head><title>${dirUrl}</title></head><body>`);
+        res.write('<style>a { display: inline-block; padding: 4px; margin: 4px; } body { font-family: sans-serif; }</style>');
+        files.forEach(file => res.write(`<a href="${dirUrl}${file}">${file}</a>`));
+        res.end('</body></html>');
 
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(body.join(''), 'utf-8');
         logRequest(req, res, dirPath);
     });
 }
@@ -101,7 +106,7 @@ function fileContent(filePath, req, res) {
         }
 
         res.writeHead(200, { 'Content-Type': contentTypeForFilePath(filePath) });
-        res.end(data, 'utf-8');
+        res.end(data);
         logRequest(req, res, filePath);
     });
 }
