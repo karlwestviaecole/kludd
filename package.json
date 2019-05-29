@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "bin": {
-    "kludd": "./bin/kludd.js"
+    "kludd": "./lib/kludd.js"
   },
   "author": "Karl West",
   "license": "MIT"
